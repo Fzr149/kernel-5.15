@@ -2,6 +2,7 @@
 #include <linux/kernel.h>
 #include <linux/proc_fs.h>
 #include <linux/uaccess.h>
+#include <linux/slab.h>
 
 static struct proc_dir_entry *oplus_sched_dir;
 static struct proc_dir_entry *sched_assist_dir;
@@ -12,20 +13,15 @@ static struct proc_dir_entry *devinfo_dir;
 
 static unsigned int sched_assist_scene_val = 0;
 
-/* 1. Handler untuk sched_assist_scene (Bitmask RMW) */
+/* 1. Handler untuk sched_assist_scene (Bitmask RMW tanpa array statis) */
 static ssize_t scene_write(struct file *file, const char __user *buf,
 			   size_t count, loff_t *ppos)
 {
-	char kbuf;
 	unsigned int val = 0;
+	int ret;
 
-	if (count >= sizeof(kbuf))
-		return -EINVAL;
-	if (copy_from_user(kbuf, buf, count))
-		return -EFAULT;
-	kbuf[count] = '\0';
-
-	if (kstrtouint(kbuf, 0, &val) == 0) {
+	ret = kstrtouint_from_user(buf, count, 0, &val);
+	if (ret == 0) {
 		if (val == 0)
 			sched_assist_scene_val = 0;
 		else if (val & 0x80)
@@ -39,9 +35,18 @@ static ssize_t scene_write(struct file *file, const char __user *buf,
 static ssize_t scene_read(struct file *file, char __user *buf,
 			  size_t count, loff_t *ppos)
 {
-	char kbuf;
-	int len = snprintf(kbuf, sizeof(kbuf), "0x%x\n", sched_assist_scene_val);
-	return simple_read_from_buffer(buf, count, ppos, kbuf, len);
+	char *kbuf;
+	int len;
+	ssize_t ret;
+
+	kbuf = kasprintf(GFP_KERNEL, "0x%x\n", sched_assist_scene_val);
+	if (!kbuf)
+		return -ENOMEM;
+
+	len = strlen(kbuf);
+	ret = simple_read_from_buffer(buf, count, ppos, kbuf, len);
+	kfree(kbuf);
+	return ret;
 }
 
 static const struct proc_ops scene_fops = {
