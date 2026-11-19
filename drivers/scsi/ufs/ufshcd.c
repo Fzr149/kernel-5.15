@@ -4242,6 +4242,11 @@ void ufshcd_auto_hibern8_update(struct ufs_hba *hba, u32 ahit)
 
 	if (!ufshcd_is_auto_hibern8_supported(hba))
 		return;
+		if (FIELD_GET(UFSHCI_AHIBERN8_SCALE_MASK, ahit) == 3 &&
+	    FIELD_GET(UFSHCI_AHIBERN8_TIMER_MASK, ahit) > 30) {
+		ahit = FIELD_PREP(UFSHCI_AHIBERN8_SCALE_MASK, 3) |
+		       FIELD_PREP(UFSHCI_AHIBERN8_TIMER_MASK, 30);
+	}
 
 	spin_lock_irqsave(hba->host->host_lock, flags);
 	if (hba->ahit != ahit) {
