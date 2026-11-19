@@ -137,7 +137,7 @@ static ssize_t ufs_read(struct file *file, char __user *buf,
 			size_t count, loff_t *ppos)
 {
 	static const char info[] =
-		"Device version:\t\tUFS2.2\nDevice manufacture:\tSAMSUNG\n";
+		"Device version:\t\tUFS2.2\nDevice manufacture:\tSKhynix\n";
 
 	return simple_read_from_buffer(buf, count, ppos, info, sizeof(info) - 1);
 }
