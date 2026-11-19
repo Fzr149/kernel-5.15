@@ -13,7 +13,6 @@ static struct proc_dir_entry *devinfo_dir;
 
 static unsigned int sched_assist_scene_val = 0;
 
-/* 1. Handler untuk sched_assist_scene (Bitmask RMW tanpa array statis) */
 static ssize_t scene_write(struct file *file, const char __user *buf,
 			   size_t count, loff_t *ppos)
 {
@@ -54,7 +53,6 @@ static const struct proc_ops scene_fops = {
 	.proc_write = scene_write,
 };
 
-/* 2. Handler Generik (Terima semua write, kembalikan "0\n" saat dibaca) */
 static ssize_t dummy_write(struct file *file, const char __user *buf,
 			   size_t count, loff_t *ppos)
 {
@@ -72,7 +70,6 @@ static const struct proc_ops dummy_fops = {
 	.proc_write = dummy_write,
 };
 
-/* 3. Handler khusus /proc/devinfo/ufs */
 static ssize_t ufs_read(struct file *file, char __user *buf,
 			size_t count, loff_t *ppos)
 {
@@ -86,7 +83,6 @@ static const struct proc_ops ufs_fops = {
 
 static int __init oplus_sched_stub_init(void)
 {
-	/* /proc/oplus_scheduler/sched_assist/* */
 	oplus_sched_dir = proc_mkdir("oplus_scheduler", NULL);
 	if (oplus_sched_dir) {
 		sched_assist_dir = proc_mkdir("sched_assist", oplus_sched_dir);
@@ -97,7 +93,6 @@ static int __init oplus_sched_stub_init(void)
 		}
 	}
 
-	/* /proc/jank_info/cpu_jank_info/task_track_enable */
 	jank_info_dir = proc_mkdir("jank_info", NULL);
 	if (jank_info_dir) {
 		cpu_jank_dir = proc_mkdir("cpu_jank_info", jank_info_dir);
@@ -105,12 +100,10 @@ static int __init oplus_sched_stub_init(void)
 			proc_create("task_track_enable", 0666, cpu_jank_dir, &dummy_fops);
 	}
 
-	/* /proc/oplus_healthinfo/cpu_loading */
 	oplus_health_dir = proc_mkdir("oplus_healthinfo", NULL);
 	if (oplus_health_dir)
 		proc_create("cpu_loading", 0666, oplus_health_dir, &dummy_fops);
 
-	/* /proc/devinfo/ufs */
 	devinfo_dir = proc_mkdir("devinfo", NULL);
 	if (devinfo_dir)
 		proc_create("ufs", 0444, devinfo_dir, &ufs_fops);
