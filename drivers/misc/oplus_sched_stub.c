@@ -80,6 +80,22 @@ static const struct proc_ops dummy_ops = {
 	.proc_write	= dummy_write,
 };
 
+/*
+ * Dummy node that also accepts ioctl. Userspace (SystemUI AFS config,
+ * SchedAssist) ioctl()s these nodes; without a handler VFS returns
+ * -ENOTTY and they spam errors. No-op, the user buffer is never touched.
+ */
+static long dummy_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
+{
+	return 0;
+}
+
+static const struct proc_ops dummy_ioctl_ops = {
+	.proc_read	= dummy_read,
+	.proc_write	= dummy_write,
+	.proc_ioctl	= dummy_ioctl,
+};
+
 /* ---------- /proc/shell-temp ---------- */
 
 #define SHELL_TEMP_MAX		120000	/* millidegree C */
@@ -176,9 +192,9 @@ static const struct stub_node {
 	{ "oplus_healthinfo/cpu_loading",                    0666, &dummy_ops },
 	{ "devinfo/ufs",                                     0444, &ufs_ops },
 	{ "oplus_mem/memory_monitor",                        0666, &dummy_ops },
-	{ "oplus_binder/ux_flag",                            0666, &dummy_ops },
+	{ "oplus_binder/ux_flag",                            0666, &dummy_ioctl_ops },
 	{ "oplus_cl/cl_glthread",                            0666, &dummy_ops },
-	{ "oplus_afs_config/afs_config",                     0666, &dummy_ops },
+	{ "oplus_afs_config/afs_config",                     0666, &dummy_ioctl_ops },
 	{ "shell-temp",                                      0666, &shell_temp_ops },
 	{ "theiaPwkReport",                                  0666, &dummy_ops },
 };
