@@ -1,5 +1,11 @@
 // SPDX-License-Identifier: GPL-2.0
 /*
+ * Oplus procfs compatibility stub for GKI 5.15
+ *
+ * Creates dummy /proc nodes that ColorOS userspace expects, so it stops
+ * spamming ENOENT errors. Only sched_assist_scene and shell-temp have
+ * real behaviour; everything else is a no-op that reads "0".
+ */
 
 #define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
 
