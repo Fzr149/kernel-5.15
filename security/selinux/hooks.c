@@ -680,12 +680,8 @@ static int selinux_set_mnt_opts(struct super_block *sb,
 	 * will be used for both mounts)
 	 */
 	if ((sbsec->flags & SE_SBINITIALIZED) && (sb->s_type->fs_flags & FS_BINARY_MOUNTDATA)
-		&& !opts) {
-		if ((kern_flags & SECURITY_LSM_NATIVE_LABELS) &&
-		    sbsec->behavior == SECURITY_FS_USE_NATIVE)
-			*set_kern_flags |= SECURITY_LSM_NATIVE_LABELS;
+	    && !opts)
 		goto out;
-	}
 
 	root_isec = backing_inode_security_novalidate(root);
 
@@ -737,9 +733,6 @@ static int selinux_set_mnt_opts(struct super_block *sb,
 		/* previously mounted with options, but not on this attempt? */
 		if ((sbsec->flags & SE_MNTMASK) && !opts)
 			goto out_double_mount;
-		if ((kern_flags & SECURITY_LSM_NATIVE_LABELS) &&
-		    sbsec->behavior == SECURITY_FS_USE_NATIVE)
-			*set_kern_flags |= SECURITY_LSM_NATIVE_LABELS;
 		rc = 0;
 		goto out;
 	}
@@ -1378,31 +1371,12 @@ static int selinux_genfs_get_sid(struct dentry *dentry,
 				path++;
 			}
 		}
-				rc = security_genfs_sid(&selinux_state, sb->s_type->name,
+		rc = security_genfs_sid(&selinux_state, sb->s_type->name,
 					path, tclass, sid);
 		if (rc == -ENOENT) {
 			/* No match in policy, mark as unlabeled. */
 			*sid = SECINITSID_UNLABELED;
 			rc = 0;
-		}
-
-		/* Oplus procfs stub SELinux label override */
-		if ((flags & SE_SBPROC) &&
-		    (!strncmp(path, "/oplus_scheduler", 16) ||
-		     !strncmp(path, "/jank_info", 10) ||
-		     !strncmp(path, "/oplus_healthinfo", 17) ||
-		     !strncmp(path, "/devinfo", 8) ||
-		     !strncmp(path, "/oplus_mem", 10) ||
-		     !strncmp(path, "/oplus_cl", 9) ||
-		     !strncmp(path, "/oplus_afs_config", 17) ||
-		     !strncmp(path, "/theiaPwkReport", 15))) {
-			const char *ctx = "u:object_r:oplus_binder_proc:s0";
-			u32 oplus_sid;
-
-			if (!security_context_to_sid(&selinux_state, ctx,
-						     strlen(ctx), &oplus_sid,
-						     GFP_KERNEL))
-				*sid = oplus_sid;
 		}
 	}
 	free_page((unsigned long)buffer);
